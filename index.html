@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RoboControl Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 8px;
+      background: linear-gradient(to right, #4f46e5, #3b82f6);
+      border-radius: 5px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #3b82f6;
+      border: 2px solid #fff;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-gray-800 to-black text-white">
+  <header class="py-10 text-center">
+    <h1 class="text-5xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-500">
+      RoboControl Hub
+    </h1>
+    <p class="text-lg text-gray-300">Control your robotic arm with precision</p>
+  </header>
+
+  <main class="container mx-auto px-4">
+    <div id="controls" class="bg-gray-900 border border-gray-700 rounded-lg shadow-2xl p-6 transform hover:-translate-y-1 transition-all duration-300">
+      <h2 class="text-2xl font-semibold mb-6 flex items-center">
+        <svg class="w-6 h-6 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l4 2"></path>
+        </svg>
+        Servo Controls
+      </h2>
+      <div class="space-y-6">
+        <div>
+          <div class="flex justify-between mb-1">
+            <label for="servo1" class="text-gray-300">Servo 1</label>
+            <span id="servo1-value" class="text-blue-400">90</span>
+          </div>
+          <input type="range" min="0" max="180" value="90" class="w-full" id="servo1">
+        </div>
+        <div>
+          <div class="flex justify-between mb-1">
+            <label for="servo2" class="text-gray-300">Servo 2</label>
+            <span id="servo2-value" class="text-blue-400">90</span>
+          </div>
+          <input type="range" min="0" max="180" value="90" class="w-full" id="servo2">
+        </div>
+        <div>
+          <div class="flex justify-between mb-1">
+            <label for="servo3" class="text-gray-300">Claw</label>
+            <span id="servo3-value" class="text-blue-400">90</span>
+          </div>
+          <input type="range" min="0" max="180" value="90" class="w-full" id="servo3">
+        </div>
+        <div>
+          <div class="flex justify-between mb-1">
+            <label for="servo4" class="text-gray-300">Servo 4</label>
+            <span id="servo4-value" class="text-blue-400">90</span>
+          </div>
+          <input type="range" min="0" max="180" value="90" class="w-full" id="servo4">
+        </div>
+        <div>
+          <div class="flex justify-between mb-1">
+            <label for="servo5" class="text-gray-300">Servo 5</label>
+            <span id="servo5-value" class="text-blue-400">90</span>
+          </div>
+          <input type="range" min="0" max="180" value="90" class="w-full" id="servo5">
+        </div>
+        <div>
+          <div class="flex justify-between mb-1">
+            <label for="servo6" class="text-gray-300">Servo 6</label>
+            <span id="servo6-value" class="text-blue-400">90</span>
+          </div>
+          <input type="range" min="0" max="180" value="90" class="w-full" id="servo6">
+        </div>
+        <button id="resetButton" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200">
+          Reset to Default
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const options = {
+      connectTimeout: 4000,
+      clientId: "web_client_" + Math.random().toString(16).substr(2, 8),
+    };
+    const mqttClient = mqtt.connect('wss://test.mosquitto.org:8081', options);
+
+    mqttClient.on('connect', () => {
+      console.log('Connected to MQTT Broker');
+    });
+
+    const servos = ['servo1', 'servo2', 'servo3', 'servo4', 'servo5', 'servo6'];
+    servos.forEach(servo => {
+      const slider = document.getElementById(servo);
+      slider.addEventListener('input', (event) => {
+        const value = event.target.value;
+        document.getElementById(`${servo}-value`).innerText = value;
+        mqttClient.publish(`robotic_arm/${servo}`, value);
+      });
+    });
+
+    document.getElementById('resetButton').addEventListener('click', () => {
+      servos.forEach(servo => {
+        const slider = document.getElementById(servo);
+        slider.value = 90;
+        document.getElementById(`${servo}-value`).innerText = 90;
+        mqttClient.publish(`robotic_arm/${servo}`, '90');
+      });
+    });
+  </script>
+</body>
+</html>
